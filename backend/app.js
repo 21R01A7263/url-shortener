@@ -3,6 +3,7 @@ import { nanoid } from "nanoid";
 import validator from "validator";
 import connection from "./src/config/mongoose.config.js";
 import urlSchema from "./src/models/urlShortenerSchema.js";
+import analytics from "./src/middleware/analytics.js";
 
 const app = express();
 
@@ -20,20 +21,16 @@ app.get("/random", (req, res) => {
   res.json({ random: randomNumber });
 });
 
-// Shorten URL route
 app.post("/api/short", async (req, res) => {
   let { url } = req.body;
 
   if (!url) {
     return res.status(400).json({ error: "URL is required" });
   }
-
-  // Normalize: prepend https:// if missing
   if (!/^https?:\/\//i.test(url)) {
     url = `https://${url}`;
   }
 
-  // Validate the URL
   if (!validator.isURL(url, { require_protocol: true })) {
     return res.status(400).json({ error: "Invalid URL format" });
   }
@@ -53,25 +50,12 @@ app.post("/api/short", async (req, res) => {
   }
 });
 
-// Redirect short URL to original
-app.get("/:shortId", async (req, res) => {
-  const { shortId } = req.params;
-  try {
-    const urlData = await urlSchema.findOne({ shortUrl: shortId });
-    if (!urlData) {
-      return res.status(404).json({ error: "URL not found" });
-    }
-    urlData.clicks += 1;
-    await urlData.save();
-    console.log(`Redirecting to: ${urlData.originalUrl}`);
-    res.redirect(urlData.originalUrl);
-  } catch (err) {
-    console.error("Error fetching URL:", err);
-    return res.status(500).json({ error: "Error fetching URL" });
-  }
+app.get("/:shortId", analytics, async (req, res) => {
+  const { originalUrl } = req.originalUrlData;
+  console.log(`Redirecting to: ${originalUrl}`);
+  res.redirect(originalUrl);
 });
 
-// Start server and connect to DB
 app.listen(3000, () => {
   connection();
   console.log("Server is running on port 3000");
