@@ -13,7 +13,6 @@ const analytics = async (req, res, next) => {
     urlData.clicks += 1;
     await urlData.save();
     req.originalUrlData = urlData;
-    console.log(req);
     next();
   } catch (err) {
     console.error("Error tracking clicks:", err);
