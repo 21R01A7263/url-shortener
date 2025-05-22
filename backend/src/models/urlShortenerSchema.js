@@ -4,6 +4,7 @@ const urlShortenerSchema = new mongoose.Schema({
   originalUrl: {
     type: String,
     required: true,
+    unique: true,
   },
   shortUrl: {
     type: String,
