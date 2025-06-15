@@ -4,9 +4,11 @@ import connection from "./src/config/mongoose.config.js";
 import analytics from "./src/middleware/analytics.js";
 import shortUrlRoute from "./src/routes/shortUrlCreation.route.js";
 import urlRedirectionRoute from "./src/routes/urlRedirection.route.js";
+import cors from "cors";
 
 const app = express();
 
+app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
